@@ -10,7 +10,9 @@ EXPOSE 443
 
 # Install
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget curl net-tools bind9-dnsutils iputils-ping tzdata lighttpd lighttpd-mod-openssl && \
+    wget curl net-tools bind9-dnsutils iputils-ping tzdata lighttpd lighttpd-mod-openssl php-cgi && \
+    mkdir /run/lighttpd && \
+    chown www-data:www-data /run/lighttpd && \
 # Cleaning up
     apt-get autoremove -y --purge && \
     rm -rf /var/lib/apt/lists/*
