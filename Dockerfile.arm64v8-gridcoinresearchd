@@ -13,7 +13,7 @@ RUN chmod 755 /usr/local/bin/start-gridcoin.sh
 # Install
 RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Time Zone Database
-    tzdata ca-certificates gpg-agent \
+    tzdata ca-certificates gpg-agent cron jq bc rrdtool curl whois netcat net-tools \
 # Install PPA dependency
     software-properties-common && \
 # Install GridcoinResearchd
