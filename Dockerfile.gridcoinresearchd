@@ -4,7 +4,10 @@ LABEL maintainer="BOINC" \
       description="A lightweight BOINC client on ARMv8 64-bit architecture."
 
 # Global environment settings
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    GRCUSER=me \
+    GRCUID=1000 \
+    GRCGID=1000
 
 # Copy files
 ADD start-gridcoin.sh /usr/local/bin
@@ -13,20 +16,19 @@ RUN chmod 755 /usr/local/bin/start-gridcoin.sh
 # Install
 RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Time Zone Database
-    tzdata ca-certificates gpg-agent cron jq bc rrdtool curl whois netcat net-tools \
+    tzdata ca-certificates gpg-agent cron jq bc rrdtool curl whois netcat net-tools netbase \
 # Install PPA dependency
     software-properties-common && \
 # Install GridcoinResearchd
     add-apt-repository -y ppa:gridcoin/gridcoin-stable && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    gridcoinresearchd && \
-    groupadd -g 1000 me && \
-    useradd -g 1000 -m -s /bin/bash me && \
+    apt-get update && apt-get install -y --no-install-recommends gridcoinresearchd && \
+    groupadd -g $GRCGID $GRCUSER && \
+    useradd -u $GRCUID -g $GRCGID -m -s /bin/bash $GRCUSER && \
 # Cleaning up
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /home/me
+WORKDIR /home/$GRCUSER
 
 CMD ["/usr/local/bin/start-gridcoin.sh"]
 
