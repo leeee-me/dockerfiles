@@ -1,0 +1,151 @@
+#!/bin/bash
+
+cd $HOME/.rrd
+PATH=$HOME/.bin:$PATH
+
+/bin/ps -axfww | /bin/grep -v grep | /bin/grep -q gridcoinresearch; [ ${PIPESTATUS[2]} -ne 0 ] && exit 1
+
+declare -A grcRrdDef
+declare -a grcRrdDefOrder
+declare -a grcPrjName
+declare -a grcPrjRac
+declare -a grcPrjMag
+
+declare -A grcPrjShortName
+
+M=""
+C=1; for i in `grc-expmag.sh | jq -r .project`; do M="$M "[$i]"="cr$C; grcRrdDefOrder+=($i); C=$((C+1)); done
+C=1; for i in `grc-expmag.sh | jq -r .project`; do grcPrjName[$C]=$i; C=$((C+1)); done
+C=1; for i in `grc-expmag.sh | jq -r .rac`; do grcPrjRac[$C]=`echo "$i / 1" | bc`; C=$((C+1)); done
+C=1; for i in `grc-expmag.sh | jq -r .magnitude`; do grcPrjMag[$C]=`echo "$i * 100 / 1" | bc`; C=$((C+1)); done
+
+
+eval "grcRrdDef=("$M")"
+
+
+#for i in "${!grcRrdDefOrder[@]}"; do echo "${grcRrdDefOrder[$i]}"; done | paste -sd' '-
+#for i in "${!grcRrdDefOrder[@]}"; do echo "${grcRrdDef[${grcRrdDefOrder[$i]}]}"; done | paste -sd' ' -
+
+#M=`for i in "${!grcPrjName[@]}"; do echo "cr$i"; done | paste -sd':' -`
+#N=`for i in "${!grcPrjName[@]}"; do echo "${grcPrjName[$i]}"; done | paste -sd':' -`
+#echo "$M N:$N"
+
+grcPrjShortName=(\
+[World_Community_Grid]="WorldCGrid" \
+[asteroids@home]="Astroids  " \
+[einstein@home]="Einstein  " \
+[milkyway@home]="MilkyWay  " \
+[numberfields@home]="NumFields " \
+[rosetta@home]="Rosetta   " \
+[universe@home]="Universe  " \
+[total]="total     " \
+)
+
+#M=`for i in "${!grcPrjRac[@]}"; do echo "cr$i"; done | paste -sd':' -`
+#N=`for i in "${!grcPrjRac[@]}"; do echo "${grcPrjRac[$i]}"; done | paste -sd':' -`
+#echo "rrdtool update -s x.rrd -t $M N:$N"
+#M=`for i in "${!grcPrjMag[@]}"; do echo "cr$i"; done | paste -sd':' -`
+#N=`for i in "${!grcPrjMag[@]}"; do echo "${grcPrjMag[$i]}"; done | paste -sd':' -`
+#echo "rrdtool update -s y.rrd -t $M N:$N"
+
+
+# create database if not exists
+[ -f grc_expmag.rrd ] || {
+rrdtool create grc_expmag.rrd --start now-14d --step 1h \
+   DS:cr1_rac:GAUGE:1d:U:U \
+   DS:cr2_rac:GAUGE:1d:U:U \
+   DS:cr3_rac:GAUGE:1d:U:U \
+   DS:cr4_rac:GAUGE:1d:U:U \
+   DS:cr5_rac:GAUGE:1d:U:U \
+   DS:cr6_rac:GAUGE:1d:U:U \
+   DS:cr7_rac:GAUGE:1d:U:U \
+   DS:cr1_mag:GAUGE:1d:U:U \
+   DS:cr2_mag:GAUGE:1d:U:U \
+   DS:cr3_mag:GAUGE:1d:U:U \
+   DS:cr4_mag:GAUGE:1d:U:U \
+   DS:cr5_mag:GAUGE:1d:U:U \
+   DS:cr6_mag:GAUGE:1d:U:U \
+   DS:cr7_mag:GAUGE:1d:U:U \
+   RRA:LAST:0.5:1h:30d
+}
+
+M=`for i in "${!grcPrjRac[@]}"; do echo "cr${i}_rac"; done | paste -sd':' -`
+N=`for i in "${!grcPrjRac[@]}"; do echo "${grcPrjRac[$i]}"; done | paste -sd':' -`
+P=`for i in "${!grcPrjMag[@]}"; do echo "cr${i}_mag"; done | paste -sd':' -`
+Q=`for i in "${!grcPrjMag[@]}"; do echo "${grcPrjMag[$i]}"; done | paste -sd':' -`
+
+[ -z "$1" ] && rrdtool update -s grc_expmag.rrd -t "$M":"$P" N:"$N":"$Q"
+[ -z "$1" ] && exit 0
+
+
+DDD=`date +"%FT%R%:z %Z"`
+rrdtool graph \
+--width 500 -l 0 -r \
+--start now-14d --end now \
+--font DEFAULT:8: \
+-t "[`hostname -s`] GRC BOINC rac $DDD" \
+-v "rac" \
+-c ARROW\#FFFFFF -c AXIS\#FFFFFF -c CANVAS\#000000 -c FONT\#FFFFFF -c BACK\#000000 -c FRAME\#FFFFFF -c MGRID\#FFFFFF -c GRID\#AAAAAA -c SHADEA\#FFFFFF -c SHADEB\#DDDDDD \
+grc_expmag_rac.png \
+DEF:xcr1=grc_expmag.rrd:cr1_rac:LAST \
+DEF:xcr2=grc_expmag.rrd:cr2_rac:LAST \
+DEF:xcr3=grc_expmag.rrd:cr3_rac:LAST \
+DEF:xcr4=grc_expmag.rrd:cr4_rac:LAST \
+DEF:xcr5=grc_expmag.rrd:cr5_rac:LAST \
+DEF:xcr6=grc_expmag.rrd:cr6_rac:LAST \
+CDEF:cr1=xcr1,1,/ \
+CDEF:cr2=xcr2,1,/ \
+CDEF:cr3=xcr3,1,/ \
+CDEF:cr4=xcr4,1,/ \
+CDEF:cr5=xcr5,1,/ \
+CDEF:cr6=xcr6,1,/ \
+LINE2:cr1#05ff05:"${grcPrjShortName[${grcPrjName[1]}]} " \
+GPRINT:cr1:LAST:"%6.0lf  | " \
+LINE2:cr2#0505e9:"${grcPrjShortName[${grcPrjName[2]}]} " \
+GPRINT:cr2:LAST:"%6.0lf  | " \
+LINE2:cr3#ea0000:"${grcPrjShortName[${grcPrjName[3]}]} " \
+GPRINT:cr3:LAST:"%6.0lf \l" \
+LINE2:cr4#9d9d9d:"${grcPrjShortName[${grcPrjName[4]}]} " \
+GPRINT:cr4:LAST:"%6.0lf  | " \
+LINE2:cr5#af00af:"${grcPrjShortName[${grcPrjName[5]}]} " \
+GPRINT:cr5:LAST:"%6.0lf  | " \
+LINE2:cr6#eaea0f:"${grcPrjShortName[${grcPrjName[6]}]} " \
+GPRINT:cr6:LAST:"%6.0lf \l" \
+2>&1 > /dev/null
+
+rrdtool graph \
+--width 500 -l 0 -r \
+--start now-14d --end now \
+--font DEFAULT:8: \
+-t "[`hostname -s`] GRC BOINC mag $DDD" \
+-v "mag" \
+--left-axis-format "%4.2lf" \
+-c ARROW\#FFFFFF -c AXIS\#FFFFFF -c CANVAS\#000000 -c FONT\#FFFFFF -c BACK\#000000 -c FRAME\#FFFFFF -c MGRID\#FFFFFF -c GRID\#AAAAAA -c SHADEA\#FFFFFF -c SHADEB\#DDDDDD \
+grc_expmag_mag.png \
+DEF:xcr1=grc_expmag.rrd:cr1_mag:LAST \
+DEF:xcr2=grc_expmag.rrd:cr2_mag:LAST \
+DEF:xcr3=grc_expmag.rrd:cr3_mag:LAST \
+DEF:xcr4=grc_expmag.rrd:cr4_mag:LAST \
+DEF:xcr5=grc_expmag.rrd:cr5_mag:LAST \
+DEF:xcr6=grc_expmag.rrd:cr6_mag:LAST \
+CDEF:cr1=xcr1,100,/ \
+CDEF:cr2=xcr2,100,/ \
+CDEF:cr3=xcr3,100,/ \
+CDEF:cr4=xcr4,100,/ \
+CDEF:cr5=xcr5,100,/ \
+CDEF:cr6=xcr6,100,/ \
+LINE2:cr1#05ff05:"${grcPrjShortName[${grcPrjName[1]}]} " \
+GPRINT:cr1:LAST:"%6.2lf  | " \
+LINE2:cr2#0505e9:"${grcPrjShortName[${grcPrjName[2]}]} " \
+GPRINT:cr2:LAST:"%6.2lf  | " \
+LINE2:cr3#ea0000:"${grcPrjShortName[${grcPrjName[3]}]} " \
+GPRINT:cr3:LAST:"%6.2lf \l" \
+LINE2:cr4#9d9d9d:"${grcPrjShortName[${grcPrjName[4]}]} " \
+GPRINT:cr4:LAST:"%6.2lf  | " \
+LINE2:cr5#af00af:"${grcPrjShortName[${grcPrjName[5]}]} " \
+GPRINT:cr5:LAST:"%6.2lf  | " \
+LINE2:cr6#eaea0f:"${grcPrjShortName[${grcPrjName[6]}]} " \
+GPRINT:cr6:LAST:"%6.2lf \l" \
+2>&1 > /dev/null
+
+

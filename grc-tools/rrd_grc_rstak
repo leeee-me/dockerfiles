@@ -1,0 +1,51 @@
+#!/bin/bash
+
+cd $HOME/.rrd
+PATH=$HOME/.bin:$PATH
+
+/bin/ps -axfww | /bin/grep -v grep | /bin/grep -q gridcoinresearch; [ ${PIPESTATUS[2]} -ne 0 ] && exit 1
+
+A="`/usr/bin/gridcoinresearchd getmininginfo | /usr/bin/jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | grep -e ^time-to-stake_days -e ^BoincRewardPending | cut -d',' -f2`"
+A1=`echo $A | awk '{print $1 " / 1"}' | bc`
+A2=`echo $A | awk '{print $2 " / 1"}' | bc`
+A="`/usr/bin/gridcoinresearchd getinfo | /usr/bin/jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | grep -e ^balance | cut -d',' -f2`"
+A3=`echo $A | awk '{print $1 " / 1"}' | bc`
+A4=`echo $A | awk '{print $1 " / 100"}' | bc`
+
+
+# create database if not exists
+[ -f grc_rstak.rrd ] || {
+rrdtool create grc_rstak.rrd --start now-14d --step 1h \
+   DS:t2stk:GAUGE:1d:U:U \
+   DS:rewpe:GAUGE:1d:U:U \
+   DS:balan:GAUGE:1d:U:U \
+   DS:balan1k:GAUGE:1d:U:U \
+   RRA:LAST:0.5:1h:30d
+}
+
+
+[ -z "$1" ] && rrdtool update -s grc_rstak.rrd -t t2stk:rewpe:balan:balan1k N:$A1:$A2:$A3:$A4
+[ -z "$1" ] && exit 0
+
+
+DDD=`date +"%FT%R%:z %Z"`
+rrdtool graph \
+--width 500 -l 0 -r \
+--start now-14d --end now \
+--font DEFAULT:8: \
+-t "[`hostname -s`] GRC Wallet  $DDD" \
+-v "g / days" \
+-c ARROW\#FFFFFF -c AXIS\#FFFFFF -c CANVAS\#000000 -c FONT\#FFFFFF -c BACK\#000000 -c FRAME\#FFFFFF -c MGRID\#FFFFFF -c GRID\#AAAAAA -c SHADEA\#FFFFFF -c SHADEB\#DDDDDD \
+grc_rstak.png \
+DEF:t2stk=grc_rstak.rrd:t2stk:LAST \
+DEF:rewpe=grc_rstak.rrd:rewpe:LAST \
+DEF:balan=grc_rstak.rrd:balan:LAST \
+DEF:balan1k=grc_rstak.rrd:balan1k:LAST \
+LINE2:t2stk#05ff05:"T-to-S Days " \
+GPRINT:t2stk:LAST:"%3.0lf " \
+LINE2:rewpe#0505e9:"P-ing Reward " \
+GPRINT:rewpe:LAST:"%5.0lf " \
+LINE2:balan1k#ea0000:"Balance/100 " \
+GPRINT:balan:LAST:"%5.0lf \l" \
+2>&1 > /dev/null
+
