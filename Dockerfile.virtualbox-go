@@ -1,0 +1,22 @@
+FROM base-ubuntu
+
+LABEL maintainer="BOINC" \
+      description="VirtualBox-savvy BOINC client."
+
+ENV PATH=/usr/bin/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Install
+RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install VirtualBox
+    virtualbox && \
+    echo virtualbox-ext-pack virtualbox-ext-pack/license select true | debconf-set-selections && \
+    apt-get install -y --no-install-recommends virtualbox-ext-pack && \
+# Install CVMFS
+    wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb && \
+    dpkg -i cvmfs-release-latest_all.deb && \
+    rm -f cvmfs-release-latest_all.deb && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends cvmfs cvmfs-config-default && \
+# Cleaning up
+    apt-get update && apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
