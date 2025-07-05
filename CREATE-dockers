@@ -26,7 +26,7 @@ proxy.server = (
 docker build -t lighttpd -f Dockerfile.lighttpd .
 
 #### if lighttpd needs to handle proxy server on other tcp port at host
-docker run -d --name lighttpd --net=host  --pid=host --security-opt apparmor=unconfined -e TZ="Asia/Taipei" --restart unless-stopped -v /var/www:/var/www -v /etc/lighttpd:/etc/lighttpd -v /var/log/lighttpd:/var/log/lighttpd -p 443:443 lighttpd
+docker run -d --name lighttpd --net=host --pid=host --security-opt apparmor=unconfined -e TZ="Asia/Taipei" --restart unless-stopped -v /var/www:/var/www -v /etc/lighttpd:/etc/lighttpd -v /var/log/lighttpd:/var/log/lighttpd -p 443:443 lighttpd
 
 #### if lighttpd does not need to handle proxy server
 docker run -d --name lighttpd --pid=host --security-opt apparmor=unconfined -e TZ="Asia/Taipei" --restart unless-stopped -v /var/www:/var/www -v /etc/lighttpd:/etc/lighttpd -v /var/log/lighttpd:/var/log/lighttpd -p 443:443 lighttpd
@@ -34,6 +34,6 @@ docker run -d --name lighttpd --pid=host --security-opt apparmor=unconfined -e T
 
 #### Virtubox boinc with host fuse
 
-docker run -d --name boinc-ubuntu-0 --net=host --pid=host --security-opt apparmor=unconfined --device /dev/fuse --device /dev/vboxdrv --cap-add SYS_ADMIN -p 127.0.0.1:31416:31416 -v /opt/appdata/boinc-vbox64:/var/lib/boinc --mount type=bind,source=/cvmfs,destination=/cvmfs,bind-propagation=shared -e BOINC_GUI_RPC_PASSWORD="123"  -e BOINC_CMD_LINE_OPTIONS="--allow_multiple_clients --allow_remote_gui_rpc --gui_rpc_port 31416" -e TZ="Asia/Taipei" --restart unless-stopped base-ubuntu-vbox64
+docker run -d --name boinc-ubuntu-0 --security-opt apparmor=unconfined --device /dev/fuse --device /dev/vboxdrv --cap-add SYS_ADMIN -p 127.0.0.1:31416:31416 -v /opt/appdata/boinc-vbox64:/var/lib/boinc --mount type=bind,source=/cvmfs,destination=/cvmfs,bind-propagation=shared -e BOINC_GUI_RPC_PASSWORD="123"  -e BOINC_CMD_LINE_OPTIONS="--allow_multiple_clients --allow_remote_gui_rpc --gui_rpc_port 31416" -e TZ="Asia/Taipei" --restart unless-stopped base-ubuntu-vbox64
 
 

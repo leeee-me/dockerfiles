@@ -1,7 +1,7 @@
 FROM arm64v8/ubuntu:22.04
 
-LABEL maintainer="BOINC" \
-      description="A lightweight BOINC client on ARMv8 64-bit architecture."
+LABEL maintainer="Leeee" \
+      description="A gridconind on ARMv8 64-bit architecture."
 
 # Global environment settings
 ENV DEBIAN_FRONTEND=noninteractive \
