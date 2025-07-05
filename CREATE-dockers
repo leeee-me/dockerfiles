@@ -6,7 +6,7 @@
 
 docker build -t gridcoin -f Dockerfile.gridcoinresearchd .
 
-docker run -d --name gridcoin --net=host  --pid=host --security-opt apparmor=unconfined -e TZ="Asia/Taipei" --restart unless-stopped -v /opt/appdata/boinc:/var/lib/boinc-client -v /home/leeee:/home/me gridcoin
+docker run -d --name gridcoin --pid=host --security-opt apparmor=unconfined -e TZ="Asia/Taipei" --restart unless-stopped -v /opt/appdata/boinc:/var/lib/boinc-client -v /home/leeee:/home/me gridcoin
 
 
 
