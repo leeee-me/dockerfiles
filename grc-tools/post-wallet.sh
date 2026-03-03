@@ -18,11 +18,13 @@ HOSTNAME=`hostname -s`
 openssl enc -a -aes-256-cbc -md sha256 -pbkdf2 -salt $PASSME -in  $HOSTNAME-grc_wa.dat -out $HOSTNAME-grc_wa.dat.enc
 rm -rf $HOSTNAME-grc_wa.dat
 
-FILE=$HOSTNAME-grc_wa.dat.enc-`date +%s`
-mv $HOSTNAME-grc_wa.dat.enc gridcoin-wallet/$FILE
-SUM=`cat gridcoin-wallet/$FILE | sha256sum | cut -d' ' -f1`
+GRD_GIT=.gridcoin-wallet
 
-cd gridcoin-wallet
+FILE=$HOSTNAME-grc_wa.dat.enc-`date +%s`
+mv $HOSTNAME-grc_wa.dat.enc $GRD_GIT/$FILE
+SUM=`cat $GRD_GIT/$FILE | sha256sum | cut -d' ' -f1`
+
+cd $GRD_GIT
 git pull --no-edit
 git add $FILE
 for i in `ls -t $HOSTNAME-*enc-* | tail -n +4`; do git rm $i; done
