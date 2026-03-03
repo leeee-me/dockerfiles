@@ -10,7 +10,7 @@ grep "false" <<< $A > /dev/null && { [ -z "$1" ] && exit 1; }
 echo "=== beacon"
 /usr/bin/gridcoinresearchd beaconstatus | /usr/bin/jq -r '.active[] | keys_unsorted[] as $k | "\($k), \(.[$k])"' | grep -e ^cpid -e ^active -e ^is_mine
 echo "=== mining"
-/usr/bin/gridcoinresearchd getmininginfo | /usr/bin/jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | grep -e ^staking -e ^mining-error -e ^time-to-stake_days -e ^BoincRewardPending 
+/usr/bin/gridcoinresearchd getmininginfo | /usr/bin/jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | grep -e ^staking -e ^mining-error -e ^time-to-stake_days -e ^BoincRewardPending -e ^researcher_status
 
 B=`/usr/bin/gridcoinresearchd getmininginfo | /usr/bin/jq -r 'keys[] as $k | "\($k), \(.[$k])" | select($k=="side-staking")'  | cut -d' ' -f2 | jq -r 'keys[] as $k | "\($k), \(.[$k])" | select($k=="side-staking-enabled")'`
 A=`echo $B | cut -d' ' -f2`
