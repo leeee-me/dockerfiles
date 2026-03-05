@@ -10,7 +10,7 @@ STAKETIME=$1
 [ ! -z "$2" ] && echo ".. lock wallet"
 /usr/bin/gridcoinresearchd walletlock || exit 1
 [ ! -z "$2" ] && echo "... unlock wallet for staking by $STAKETIME secs"
-/usr/bin/gridcoinresearchd walletpassphrase `cat $HOME/.passme.gpg.asc | gpg -d 2> /dev/null` $STAKETIME true
+/usr/bin/gridcoinresearchd walletpassphrase `cat $HOME/.passme.gpg.asc | gpg -d 2> /dev/null` $STAKETIME true || exit 1
 
 [ ! -z "$2" ] && echo -n ".... sleep 15s to update" 1>&2
 [ ! -z "$2" ] && for i in `seq 15`; do echo -n "." 1>&2; sleep 1s; done && echo 1>&2
@@ -30,5 +30,7 @@ STAKETIME=$1
 
 
 [ ! -z "$2" ] && echo
-[ ! -z "$2" ] && echo -n ">> Wallet unlocked until: " && date --date=@`/usr/bin/gridcoinresearchd getinfo | /usr/bin/jq -r '.unlocked_until'`
-[ ! -z "$2" ] && echo -n ">> Now time is:           " && date --date=now
+[ ! -z "$2" ] && echo -n "## Wallet unlocked until: " && date --date=@`/usr/bin/gridcoinresearchd getinfo | /usr/bin/jq -r '.unlocked_until'`
+[ ! -z "$2" ] && echo -n "## Now time is:           " && date --date=now
+
+exit 0
