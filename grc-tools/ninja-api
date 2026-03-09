@@ -1,0 +1,73 @@
+#!/bin/bash
+
+
+nc -z -w 4 -n 168.95.1.1 53 || { echo "No ipv4 network"; exit 1; }
+
+[ -z "$1" ] && echo "$0 <ip address>" && exit 0
+
+\grep -q "[\.]" <<< $1 && \
+{
+
+[ x"$2" = "xh" ] && printf "| %-15s | %-2s | %-30s | %-30s |\n" "Address" "CC" "Region" "Time Zone" && exit 0
+
+curl -sk4 -X GET "https://api.api-ninjas.com/v1/iplookup?address="$1 \
+     -H "X-Api-Key: wvItjmbAf4tFRwN5GIjHcg==9BuMZKEEsKvW9rKk" \
+     -H "Content-Type: application/json" | \
+     jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | \grep -e "country_code" -e "region[^_]" -e "timezone" -e "address" | sort > /tmp/N.$$
+
+IFS=$'\n'
+for i in `cat /tmp/N.$$`; do
+	\grep -q "address" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "| %-15s | "; } && continue
+	\grep -q "country" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "%-2s | "; } && continue
+	\grep -q "region" <<< $i && { echo $i | sed 's/, /+/g' | sed 's/ /#/g' | cut -d'+' -f2 | iconv -f utf-8 -t ascii//TRANSLIT | xargs printf "%-30s | "; } && continue
+	\grep -q "timezone" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "%-30s | "; } && continue
+done | paste -s - | sed 's/#/ /g'
+
+rm -rf /tmp/N.$$
+
+exit 0;
+}
+
+
+\grep -q ':' <<< $1 && \
+{
+
+[ x"$2" = "xh" ] && printf "| %-39s | %-2s | %-30s | %-30s |\n" "Address" "CC" "Region" "Time Zone" && exit 0
+
+curl -sk4 -X GET "https://api.api-ninjas.com/v1/iplookup?address="$1 \
+     -H "X-Api-Key: wvItjmbAf4tFRwN5GIjHcg==9BuMZKEEsKvW9rKk" \
+     -H "Content-Type: application/json" | \
+     jq -r 'keys_unsorted[] as $k | "\($k), \(.[$k])"' | \grep -e "country_code" -e "region[^_]" -e "timezone" -e "address" | sort > /tmp/N.$$
+
+A=`cat /tmp/N.$$ | wc -l`
+
+[ "$A" != "0" ] && \
+{
+
+IFS=$'\n'
+for i in `cat /tmp/N.$$`; do
+	\grep -q "address" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "| %-39s | "; } && continue
+	\grep -q "country" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "%-2s | "; } && continue
+	\grep -q "region" <<< $i && { echo $i | sed 's/, /+/g' | sed 's/ /#/g' | cut -d'+' -f2 | iconv -f utf-8 -t ascii//TRANSLIT | xargs printf "%-30s | "; } && continue
+	\grep -q "timez" <<< $i && { echo $i | sed 's/, /+/g' | cut -d'+' -f2 | xargs printf "%-30s | "; } && continue
+done | paste -s - | sed 's/#/ /g'
+
+rm -rf /tmp/N.$$
+
+exit 0;
+
+};
+
+printf "| %-39s | %-2s | %-30s |\n" $1 "??" "?/?" 
+
+exit 0;
+}
+
+
+#is_valid, true
+#country, United States
+#country_code, US
+#region_code, IL
+#region, Illinois
+#timezone, America/Chicago
+#address, 73.9.149.180
